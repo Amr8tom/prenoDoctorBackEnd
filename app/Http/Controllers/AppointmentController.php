@@ -1471,4 +1471,42 @@ class AppointmentController extends Controller
         $data = Coupons::whereNotIn('id', explode(',', $user->coupons_used))->orderBy('id', 'DESC')->get();
         return GlobalFunction::sendDataResponse(true, 'coupons fetched successfully', $data);
     }
+
+
+    function addTenWithTime($count, $startStr, $endStr) {
+        // Convert the input strings to integers
+        $start = intval($startStr);     // 7000
+        $end = intval($endStr);        // 9000
+
+        // Increment the integer by 10
+        $incrementer=$start;
+        // If integer reaches end, reset it to start and increment hours
+
+        while ($incrementer < $end) {
+
+            $jsonString = '{"key1":"value1","key2":"value2","key3":"value3"}';
+            $arrayData = json_decode($jsonString, true);
+            $key = $incrementer; // Generate a new key
+            $value = true; // Generate a new value
+            $arrayData[$key] = $value; // Add key-value pair to the array
+
+            // Increment loop counter
+            $incrementer += $count;        }
+
+        $arrayData = json_decode($jsonString, true);
+        $jsonData= json_encode($arrayData);
+        // if ($incremeneter >= $end) {
+        //     // Add one to the hours string
+        //     $hoursString = substr($startStr, 0, 2); // Extract hours part
+        //     $hours = intval($hoursString) + 1; // Increment hours
+        //     $startStr = str_pad($hours, 2, "0", STR_PAD_LEFT) . substr($startStr, 2); // Update start string
+        // }
+
+        // Convert the result back to a string
+        // $output = str_pad($integer, 2, "0", STR_PAD_LEFT) . substr($startStr, 2); // Update minutes part
+
+        return $jsonData;
+    }
+
+
 }

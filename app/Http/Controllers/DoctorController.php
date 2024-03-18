@@ -1971,10 +1971,15 @@ class DoctorController extends Controller
         $slot->delete();
         return GlobalFunction::sendSimpleResponse(true, 'This Slot deleted successfully!');
     }
+
+
+
+
     function addAppointmentSlots(Request $request)
     {
         $rules = [
             'time' => 'required',
+            'end_time'=>'required',
             'weekday' => 'required',
             'doctor_id' => 'required',
             'booking_limit' => 'required',
@@ -1991,8 +1996,10 @@ class DoctorController extends Controller
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
         }
 
+
         $slot = DoctorAppointmentSlots::where('time', $request->time)
             ->where('weekday', $request->weekday)
+            ->where('end_time', $request->end_time)
             ->where('doctor_id', $doctor->id)
             ->first();
 
@@ -2002,6 +2009,79 @@ class DoctorController extends Controller
             $slot->weekday = $request->weekday;
             $slot->doctor_id = $request->doctor_id;
             $slot->booking_limit = $request->booking_limit;
+            $slot->end_time = $request->end_time;
+            $slot->slot_duration= $request->slot_duration;
+            $start = intval($request->time);     // 7000
+            $end = intval($request->end_time);
+            // echo $end;      // 9000
+            // Increment the integer by 10
+            $incrementer=$start;
+            $arrayData = []; // Initialize an empty array
+
+            $key = $incrementer; // Generate a new key
+            $key = sprintf('%04d', $key);
+            $value = true; // Generate a new value
+            $arrayData[$key] = $value; // Add key-value pair to the array
+            // If integer reaches end, reset it to start and increment hours
+            while ($incrementer < $end) {
+                $hoursString = substr($incrementer, 2, 0); // Extract hours part
+                $hours=intval($hoursString);
+                $minString = substr($incrementer, 2, 2); // Extract hours part
+                $mins = intval($minString);
+                if($mins+$request->slot_duration < 60){
+                    $incrementer = $incrementer + $request->slot_duration;
+                    $incrementer = sprintf('%04d', $incrementer);
+                }else{
+                    $incrementer = $incrementer + 100;
+                    $incrementer = intval($incrementer / 100) * 100;
+                    $totalMins =$mins+$request->slot_duration  ;
+                    $restMins= $totalMins - 60;
+                    $incrementer = $incrementer + $restMins;
+                    $incrementer = sprintf('%04d', $incrementer);
+                }
+
+                // Increment loop counter
+                $key = $incrementer; // Generate a new key
+                $value = true; // Generate a new value
+                $arrayData[$key] = $value;
+
+            }
+
+            while ($incrementer != $end) {
+                $hoursString = substr($incrementer, 2, 0); // Extract hours part
+                $hours=intval($hoursString);
+                $minString = substr($incrementer, 2, 2); // Extract hours part
+                $mins = intval($minString);
+                echo $mins;
+                if($mins+$request->slot_duration < 60){
+                    $incrementer = $incrementer + $request->slot_duration;
+                    $incrementer = sprintf('%04d', $incrementer);
+
+                }else{
+                    $incrementer = $incrementer + 100;
+                    $incrementer = intval($incrementer / 100) * 100;
+                    if($incrementer ==2400){
+                        $incrementer =0000;
+                    }
+                    $totalMins =$mins+$request->slot_duration  ;
+                    $restMins= $totalMins - 60;
+
+                    $incrementer = $incrementer + $restMins;
+                    $incrementer = sprintf('%04d', $incrementer);
+                }
+                // Increment loop counter
+                $key = $incrementer; // Generate a new key
+                $value = true; // Generate a new value
+                $arrayData[$key] = $value;
+
+            }
+                $jsonData = json_encode($arrayData);
+                // echo $jsonData;
+                echo $jsonData;
+            $slot->slots_time_json =$jsonData;
+
+            // $duration =($request->end_time - $request->time)/$request->booking_limit;
+            // $slot->duration_slot = $duration;
             $slot->save();
 
             $slots = DoctorAppointmentSlots::where('doctor_id', $request->doctor_id)->get();
@@ -2010,6 +2090,10 @@ class DoctorController extends Controller
             return GlobalFunction::sendSimpleResponse(false, 'This Slot is available already!');
         }
     }
+
+
+
+
     function addEditServiceLocations(Request $request)
     {
         $rules = [
@@ -2520,7 +2604,6 @@ class DoctorController extends Controller
         if ($doctor == null) {
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
         }
-
         $doctor = GlobalFunction::generateDoctorFullData($doctor->id);
 
         return response()->json(['status' => true, 'message' => 'Data fetched successfully !', 'data' => $doctor]);
@@ -2557,6 +2640,7 @@ class DoctorController extends Controller
         $rules = [
             'identity' => 'required',
             'device_token' => 'required',
+            'password'=> 'required|min:6'
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -2571,7 +2655,11 @@ class DoctorController extends Controller
             $doctor = new Doctors();
             $doctor->identity = $request->identity;
             $doctor->name = $request->name;
+            $token = bin2hex(random_bytes(60)); // Generate a 60-character token
+            $doctor->api_token = $token;
+            $doctor->password = $request ->password;
             $doctor->device_token = $request->device_token;
+
             $doctor->doctor_number = GlobalFunction::generateDoctorNumber();
             $doctor->save();
 
@@ -2579,11 +2667,44 @@ class DoctorController extends Controller
 
             return GlobalFunction::sendDataResponse(true, 'Doctor Data fetched successfully', $doctor);
         } else {
-            $doctor->device_token = $request->device_token;
-            $doctor->save();
-            return GlobalFunction::sendDataResponse(true, 'Doctor Data fetched successfully', $doctor);
+
+            return GlobalFunction::sendDataResponse(false, 'Doctor email already exist', null);
         }
     }
+
+    function doctorLogin(Request $request)
+    {
+        $rules = [
+            'identity' => 'required',
+            'device_token' => 'required',
+            'password' => 'required',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $messages = $validator->errors()->all();
+            $msg = $messages[0];
+            return response()->json(['status' => false, 'message' => $msg]);
+        }
+
+        $doctor = Doctors::where('identity', $request->identity)->where('password', $request->password)->first();
+        if ($doctor != null) {
+            $doctor->device_token = $request->device_token;  // from firebase massaging for notifications
+            $token = bin2hex(random_bytes(60)); // Generate a 60-character token
+            $doctor->api_token = $token;
+            $doctor->doctor_number = GlobalFunction::generateDoctorNumber();
+            $doctor->save();
+            $doctor = Doctors::find($doctor->id);
+
+            return GlobalFunction::sendDataResponse(true, 'login successfully ', $doctor);
+        } else {
+
+            return GlobalFunction::sendDataResponse(false, 'incorrecrt informations', $doctor);
+        }
+    }
+
+
+
     function suggestDoctorCategory(Request $request)
     {
         $rules = [
@@ -2754,4 +2875,44 @@ class DoctorController extends Controller
 
         return GlobalFunction::sendSimpleResponse(true, 'Doctor log out successfully');
     }
+
+
+
+//  "7000"  "9000"
+    function addTenWithTime($count, $startStr, $endStr) {
+        // Convert the input strings to integers
+        $start = intval($startStr);     // 7000
+        $end = intval($endStr);        // 9000
+
+        // Increment the integer by 10
+        $incrementer=$start;
+        // If integer reaches end, reset it to start and increment hours
+
+        while ($incrementer < $end) {
+
+            $jsonString = '{"key1":"value1","key2":"value2","key3":"value3"}';
+            $arrayData = json_decode($jsonString, true);
+            $key = $incrementer; // Generate a new key
+            $value = true; // Generate a new value
+            $arrayData[$key] = $value; // Add key-value pair to the array
+
+            $incrementer += $count;
+
+        }
+
+        $arrayData = json_decode($jsonString, true);
+        $jsonData= json_encode($arrayData);
+        // if ($incremeneter >= $end) {
+        //     // Add one to the hours string
+        //     $hoursString = substr($startStr, 0, 2); // Extract hours part
+        //     $hours = intval($hoursString) + 1; // Increment hours
+        //     $startStr = str_pad($hours, 2, "0", STR_PAD_LEFT) . substr($startStr, 2); // Update start string
+        // }
+
+        // Convert the result back to a string
+        // $output = str_pad($integer, 2, "0", STR_PAD_LEFT) . substr($startStr, 2); // Update minutes part
+
+        return $jsonData;
+    }
+
 }

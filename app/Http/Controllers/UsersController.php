@@ -1385,6 +1385,7 @@ class UsersController extends Controller
             'device_token' => 'required',
             'fullname' => 'required',
             'login_type' => [Rule::in(1, 2, 3)],
+            'password'=>'required|min:6',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -1396,14 +1397,9 @@ class UsersController extends Controller
 
         $user = Users::where('identity', $request->identity)->first();
         if ($user != null) {
-            $user->device_type = $request->device_type;
-            $user->device_token = $request->device_token;
-            $user->login_type = $request->login_type;
-            $user->save();
 
-            $user = Users::find($user->id);
 
-            return GlobalFunction::sendDataResponse(true, 'User exists already', $user);
+            return GlobalFunction::sendDataResponse(false, 'user already registerd', null);
         } else {
             $user = new Users();
             $user->identity = $request->identity;
@@ -1411,11 +1407,67 @@ class UsersController extends Controller
             $user->device_token = $request->device_token;
             $user->fullname = $request->fullname;
             $user->login_type = $request->login_type;
+            $user->password = $request->password;
+            $token = bin2hex(random_bytes(60)); // Generate a 60-character token
+            $user->api_token = $token;
             $user->save();
 
             $user = Users::find($user->id);
 
-            return GlobalFunction::sendDataResponse(true, 'User registration successful', $user);
+            return GlobalFunction::sendDataResponse(true, 'User registered successfully', $user);
         }
+
+
     }
+
+    function loginUser(Request $request)
+    {
+        $rules = [
+            'identity' => 'required',      // the identity equals the email for the user
+            'device_type' => [Rule::in(1, 2)],
+            'device_token' => 'required',
+            'login_type' => [Rule::in(1, 2, 3)],
+            'password'=>'required',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $messages = $validator->errors()->all();
+            $msg = $messages[0];
+            return response()->json(['status' => false, 'message' => $msg]);
+        }
+
+
+        $user = Users::where('identity', $request->identity)->where('password', $request->password)->first();
+        if ($user != null) {
+            $user->device_type = $request->device_type;
+            $user->device_token = $request->device_token;   // this token from firebase form and i use it for notification
+            $user->login_type = $request->login_type;
+            $token = bin2hex(random_bytes(60)); // Generate a 60-character token
+            $user->api_token = $token;  // this token i dont user it till now but i created it
+            $user->save();
+
+            $user = Users::find($user->id);
+
+            return GlobalFunction::sendDataResponse(true, 'User login successful', $user);
+        }
+
+        $user = Users::where('identity', $request->identity)->first();
+        if ($user != null) {
+
+
+            return GlobalFunction::sendDataResponse(false, 'incorrect password', null);
+        } else {
+
+
+            return GlobalFunction::sendDataResponse(false, 'incorrect informations', null);
+        }
+
+
+    }
+
+
 }
+
+
+

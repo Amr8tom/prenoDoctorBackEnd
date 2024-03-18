@@ -22,7 +22,8 @@ class GlobalFunction extends Model
         $title = $title;
         $descreption  = $message;
         $url = 'https://fcm.googleapis.com/fcm/send';
-        $api_key = env('FCM_TOKEN');
+        // $api_key = env('FCM_TOKEN');
+        $api_key = env('AAAArtN5Hc0:APA91bFw1nK92SQplMpXuo1Lh2-Vy_xavQkRYg6T43XUwWUo9uON7X2IDsKqwEtOeQ20m25_bSFGfubgcvwSwrc1TpqovQYrR5z4f0VFs0BFY88xU_FQW-QHf4XPDrt0fb_qbKADymNR');
 
         $notificationArray = array('title' => $title, 'body' => $descreption, 'sound' => 'default', 'image' => "", 'badge' => '1');
 
@@ -58,7 +59,7 @@ class GlobalFunction extends Model
         $title = $title;
         $descreption  = $message;
         $url = 'https://fcm.googleapis.com/fcm/send';
-        $api_key = env('FCM_TOKEN');
+        $api_key = env('AAAArtN5Hc0:APA91bFw1nK92SQplMpXuo1Lh2-Vy_xavQkRYg6T43XUwWUo9uON7X2IDsKqwEtOeQ20m25_bSFGfubgcvwSwrc1TpqovQYrR5z4f0VFs0BFY88xU_FQW-QHf4XPDrt0fb_qbKADymNR');
 
         $notificationArray = array('title' => $title, 'body' => $descreption, 'sound' => 'default', 'image' => "", 'badge' => '1');
 
@@ -152,7 +153,7 @@ class GlobalFunction extends Model
     public static function sendPushToDoctor($title, $message, $doctor)
     {
         $url = 'https://fcm.googleapis.com/fcm/send';
-        $api_key = env('FCM_TOKEN');
+        $api_key = env('AAAArtN5Hc0:APA91bFw1nK92SQplMpXuo1Lh2-Vy_xavQkRYg6T43XUwWUo9uON7X2IDsKqwEtOeQ20m25_bSFGfubgcvwSwrc1TpqovQYrR5z4f0VFs0BFY88xU_FQW-QHf4XPDrt0fb_qbKADymNR');
         $notificationArray = array('title' => $title, 'body' => $message, 'sound' => 'default', 'badge' => '1');
 
         if ($doctor->is_notification == 1) {
@@ -192,7 +193,7 @@ class GlobalFunction extends Model
     public static function sendPushToUser($title, $message, $user)
     {
         $url = 'https://fcm.googleapis.com/fcm/send';
-        $api_key = env('FCM_TOKEN');
+        $api_key = env('AAAArtN5Hc0:APA91bFw1nK92SQplMpXuo1Lh2-Vy_xavQkRYg6T43XUwWUo9uON7X2IDsKqwEtOeQ20m25_bSFGfubgcvwSwrc1TpqovQYrR5z4f0VFs0BFY88xU_FQW-QHf4XPDrt0fb_qbKADymNR');
         $notificationArray = array('title' => $title, 'body' => $message, 'sound' => 'default', 'badge' => '1');
 
         if ($user->is_notification == 1) {

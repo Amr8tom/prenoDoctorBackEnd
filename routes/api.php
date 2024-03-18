@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //******************/ Users
 Route::prefix('user')->group(function () {
     // Common
+    Route::post('loginUser',[UsersController::class,'loginUser'])->middleware('checkHeader');
     Route::post('registerUser', [UsersController::class, 'registerUser'])->middleware('checkHeader');
     Route::post('updateUserDetails', [UsersController::class, 'updateUserDetails'])->middleware('checkHeader');
     Route::post('deleteUserAccount', [UsersController::class, 'deleteUserAccount'])->middleware('checkHeader');
@@ -63,6 +64,7 @@ Route::prefix('user')->group(function () {
 
 
 //******************/ Doctor
+Route::post('doctorLogin', [DoctorController::class, 'doctorLogin'])->middleware('checkHeader');
 Route::post('doctorRegistration', [DoctorController::class, 'doctorRegistration'])->middleware('checkHeader');
 Route::post('updateDoctorDetails', [DoctorController::class, 'updateDoctorDetails'])->middleware('checkHeader');
 Route::post('deleteDoctorAccount', [DoctorController::class, 'deleteDoctorAccount'])->middleware('checkHeader');
