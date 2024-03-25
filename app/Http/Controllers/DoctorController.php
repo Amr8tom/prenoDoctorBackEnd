@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Http\Controllers\Storage;
 use App\Models\Appointments;
 use App\Models\Constants;
 use App\Models\DoctorAppointmentSlots;
@@ -2047,12 +2047,11 @@ class DoctorController extends Controller
 
             }
 
-            while ($incrementer != $end) {
+            while ($incrementer != $end && $incrementer < $end) {
                 $hoursString = substr($incrementer, 2, 0); // Extract hours part
                 $hours=intval($hoursString);
                 $minString = substr($incrementer, 2, 2); // Extract hours part
                 $mins = intval($minString);
-                echo $mins;
                 if($mins+$request->slot_duration < 60){
                     $incrementer = $incrementer + $request->slot_duration;
                     $incrementer = sprintf('%04d', $incrementer);
@@ -2090,6 +2089,8 @@ class DoctorController extends Controller
             return GlobalFunction::sendSimpleResponse(false, 'This Slot is available already!');
         }
     }
+
+
 
 
 
@@ -2605,6 +2606,12 @@ class DoctorController extends Controller
             return GlobalFunction::sendSimpleResponse(false, 'Doctor does not exists!');
         }
         $doctor = GlobalFunction::generateDoctorFullData($doctor->id);
+        if ($doctor->image) {
+            $profileImageUrl = url($doctor->image);
+        } else {
+            $profileImageUrl = null;
+        }
+        echo $profileImageUrl;
 
         return response()->json(['status' => true, 'message' => 'Data fetched successfully !', 'data' => $doctor]);
     }

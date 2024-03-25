@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AddedPatients;
 use App\Models\AppointmentDocs;
+use App\Models\DoctorAppointmentSlots;
 use App\Models\Appointments;
 use App\Models\Constants;
 use App\Models\Coupons;
@@ -1327,11 +1328,12 @@ class AppointmentController extends Controller
         $rules = [
             'user_id' => 'required',
             'doctor_id' => 'required',
-            'problem' => 'required',
             'date' => 'required',
             'time' => 'required',
+            'weekDay'=>'required',
+            'start_time'=>'required',
             'type' => 'required',
-            'order_summary' => 'required',
+            // 'order_summary' => 'required',
             'is_coupon_applied' => [Rule::in(1, 0)],
             'service_amount' => 'required',
             'discount_amount' => 'required',
@@ -1346,9 +1348,7 @@ class AppointmentController extends Controller
             $msg = $messages[0];
             return response()->json(['status' => false, 'message' => $msg]);
         }
-
         $settings = GlobalSettings::first();
-
         $user = Users::find($request->user_id);
         if ($user == null) {
             return response()->json(['status' => false, 'message' => "User doesn't exists!"]);
@@ -1393,11 +1393,9 @@ class AppointmentController extends Controller
         $appointment->date = $request->date;
         $appointment->time = $request->time;
         $appointment->type = $request->type;
-
         $appointment->problem = GlobalFunction::cleanString($request->problem);
         $appointment->order_summary = $request->order_summary;
         $appointment->is_coupon_applied = $request->is_coupon_applied;
-
         $appointment->service_amount = $request->service_amount;
         $appointment->discount_amount = $request->discount_amount;
         $appointment->subtotal = $request->subtotal;
@@ -1410,6 +1408,22 @@ class AppointmentController extends Controller
             $discounts = explode(',', $user->coupons_used);
             array_push($discounts, $request->coupon_id);
             $user->coupons_used = implode(',', $discounts);
+        }
+
+        $slot = DoctorAppointmentSlots::where('time', $request->start_time)
+        ->where('weekday', $request->weekDay)
+        ->where('doctor_id', $doctor->id)
+        ->first();
+        if ($slot != null) {
+
+            $jsonSlots=$slot->slots_time_json;
+            $jsonSlots=json_decode($jsonSlots, true);
+            $jsonSlots[$request->time] = false;
+            $jsonSlotsEncoded = json_encode($jsonSlots);
+            $slot->slots_time_json = $jsonSlotsEncoded; // $jsonSlotsEncoded is the modified JSON data
+            $slot->save();
+
+
         }
 
         $appointment->save();
