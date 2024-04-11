@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Http\Request;
@@ -58,13 +59,15 @@ Route::prefix('user')->group(function () {
     Route::post('fetchMyAppointments', [AppointmentController::class, 'fetchMyAppointments'])->middleware('checkHeader');
 
     // Notification
-    Route::post('fetchNotification', [UsersController::class, 'fetchNotification'])->middleware('checkHeader');
+    Route::post('fetchNotification', [UsersController::class, 'fetchNotifsication'])->middleware('checkHeader');
     Route::get('TEST_sendNotificationToUser', [UsersController::class, 'TEST_sendNotificationToUser']);
 });
 
 
 //******************/ Doctor
 Route::post('doctorLogin', [DoctorController::class, 'doctorLogin'])->middleware('checkHeader');
+Route::get('uploads/{filename}', [ImageController::class, 'show']);  // to get the personal images
+
 Route::post('doctorRegistration', [DoctorController::class, 'doctorRegistration'])->middleware('checkHeader');
 Route::post('updateDoctorDetails', [DoctorController::class, 'updateDoctorDetails'])->middleware('checkHeader');
 Route::post('deleteDoctorAccount', [DoctorController::class, 'deleteDoctorAccount'])->middleware('checkHeader');

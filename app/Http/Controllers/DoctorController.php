@@ -2611,7 +2611,7 @@ class DoctorController extends Controller
         } else {
             $profileImageUrl = null;
         }
-        echo $profileImageUrl;
+        // echo $profileImageUrl;
 
         return response()->json(['status' => true, 'message' => 'Data fetched successfully !', 'data' => $doctor]);
     }
